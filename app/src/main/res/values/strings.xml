@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Score Count</string>
+    <string name="rated_time1">How was your day?</string>
+    <string name="rated_time2">Let rate today!</string>
+
+    <string name="normal_time1">Read book everyday.</string>
+    <string name="normal_time2">Focus 100% on your job!</string>
+</resources>
