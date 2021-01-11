@@ -3,10 +3,29 @@
     <string-array name="rated_time">
         <item>@string/rated_time1</item>
         <item>@string/rated_time2</item>
+        <item>@string/rated_time3</item>
+        <item>@string/rated_time4</item>
+        <item>@string/rated_time5</item>
+        <item>@string/rated_time6</item>
+        <item>@string/rated_time7</item>
+        <item>@string/rated_time8</item>
     </string-array>
 
     <string-array name="normal_time">
         <item>@string/normal_time1</item>
         <item>@string/normal_time2</item>
+        <item>@string/normal_time3</item>
+        <item>@string/normal_time4</item>
+        <item>@string/normal_time5</item>
+        <item>@string/normal_time6</item>
+        <item>@string/normal_time7</item>
+        <item>@string/normal_time8</item>
+        <item>@string/normal_time9</item>
+        <item>@string/normal_time10</item>
+        <item>@string/normal_time11</item>
+        <item>@string/normal_time12</item>
+        <item>@string/normal_time13</item>
+        <item>@string/normal_time14</item>
+        <item>@string/normal_time15</item>
     </string-array>
 </resources>

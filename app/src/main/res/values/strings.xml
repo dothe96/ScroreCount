@@ -1,8 +1,27 @@
 <resources>
     <string name="app_name">Score Count</string>
     <string name="rated_time1">How was your day?</string>
-    <string name="rated_time2">Let rate today!</string>
+    <string name="rated_time2">Rate it today</string>
+    <string name="rated_time3">Is it good today?</string>
+    <string name="rated_time4">The goal will be achieved</string>
+    <string name="rated_time5">Another day just passes by</string>
+    <string name="rated_time6">What did you do today?</string>
+    <string name="rated_time7">Complete all goals for the day</string>
+    <string name="rated_time8">Did you finish everything?</string>
 
-    <string name="normal_time1">Read book everyday.</string>
-    <string name="normal_time2">Focus 100% on your job!</string>
+    <string name="normal_time1">Read books everyday</string>
+    <string name="normal_time2">Focus 100% on your work</string>
+    <string name="normal_time3">Better everyday</string>
+    <string name="normal_time4">Let the money work for you</string>
+    <string name="normal_time5">Time is limited</string>
+    <string name="normal_time6">Don\'t waste any more time</string>
+    <string name="normal_time7">Do what needs to be done immediately</string>
+    <string name="normal_time8">Did you make money while you slept?</string>
+    <string name="normal_time9">There is so much more to do</string>
+    <string name="normal_time10">Self-worth increases everyday</string>
+    <string name="normal_time11">Must constantly learn</string>
+    <string name="normal_time12">Money is the result of good everyday habits</string>
+    <string name="normal_time13">Business to gain wealth</string>
+    <string name="normal_time14">If you don\'t know who\'s losing, it\'s you</string>
+    <string name="normal_time15">Need knowledge before doing anything</string>
 </resources>

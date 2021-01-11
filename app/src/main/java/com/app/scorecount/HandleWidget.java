@@ -3,6 +3,7 @@ package com.app.scorecount;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
@@ -29,14 +30,16 @@ public class HandleWidget extends AppWidgetProvider {
     private final static int DOWN = -1;
     private final static int NORMAL = 0;
     private final static int UP = 1;
-    private boolean flag = false;
+    private boolean flag = true;
 
     private AppDatabase appDatabase;
 
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
-        buttonClick(context, intent.getAction());
+        if (intent.getAction() == DOWN_CLICK || intent.getAction() == NORMAL_CLICK || intent.getAction() == UP_CLICK) {
+            buttonClick(context, intent.getAction());
+        }
     }
 
     @Override
@@ -112,13 +115,16 @@ public class HandleWidget extends AppWidgetProvider {
         } else if (typeClick == UP_CLICK) {
             Log.d(TAG, "buttonClick: " + UP_CLICK);
             StoreLevelsCount storeLevelsCount = new StoreLevelsCount();
-            storeLevelsCount.setName("down");
+            storeLevelsCount.setName("up");
             storeLevelsCount.setState(UP);
             storeLevelsCount.setDate(Calendar.getInstance().getTime().toString());
             StoreLevelsCountDAO storeLevelsCountDAO = getAppDatabase(context).getStoreLevelsCountDAO();
             storeLevelsCountDAO.insert(storeLevelsCount);
             flag = false;
         }
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context, HandleWidget.class));
+        onUpdate(context, appWidgetManager, appWidgetIds);
     }
 
     private void updateText(RemoteViews views, Context context, boolean isRatedTime, int levels) {
@@ -133,7 +139,7 @@ public class HandleWidget extends AppWidgetProvider {
     private String getRandomText(Context context, boolean isRatedTime) {
         String text;
         String[] array;
-        if (isRatedTime) {
+        if (isRatedTime && flag) {
             array = context.getResources().getStringArray(R.array.rated_time);
         } else {
             array = context.getResources().getStringArray(R.array.normal_time);
