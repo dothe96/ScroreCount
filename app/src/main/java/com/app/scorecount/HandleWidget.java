@@ -37,7 +37,7 @@ public class HandleWidget extends AppWidgetProvider {
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
-        if (intent.getAction() == DOWN_CLICK || intent.getAction() == NORMAL_CLICK || intent.getAction() == UP_CLICK) {
+        if (intent.getAction().equals(DOWN_CLICK) || intent.getAction().equals(NORMAL_CLICK) || intent.getAction().equals(UP_CLICK)) {
             buttonClick(context, intent.getAction());
         }
     }
@@ -93,7 +93,7 @@ public class HandleWidget extends AppWidgetProvider {
     }
 
     private void buttonClick(Context context, String typeClick) {
-        if (typeClick == DOWN_CLICK) {
+        if (typeClick.equals(DOWN_CLICK)) {
             Log.d(TAG, "buttonClick: " + DOWN_CLICK);
             StoreLevelsCount storeLevelsCount = new StoreLevelsCount();
             storeLevelsCount.setName("down");
@@ -102,7 +102,7 @@ public class HandleWidget extends AppWidgetProvider {
             StoreLevelsCountDAO storeLevelsCountDAO = getAppDatabase(context).getStoreLevelsCountDAO();
             storeLevelsCountDAO.insert(storeLevelsCount);
             flag = false;
-        } else if (typeClick == NORMAL_CLICK) {
+        } else if (typeClick.equals(NORMAL_CLICK)) {
             Log.d(TAG, "buttonClick: " + NORMAL_CLICK);
             StoreLevelsCount storeLevelsCount = new StoreLevelsCount();
             storeLevelsCount.setName("normal");
@@ -112,7 +112,7 @@ public class HandleWidget extends AppWidgetProvider {
             storeLevelsCountDAO.insert(storeLevelsCount);
             flag = false;
 
-        } else if (typeClick == UP_CLICK) {
+        } else if (typeClick.equals(UP_CLICK)) {
             Log.d(TAG, "buttonClick: " + UP_CLICK);
             StoreLevelsCount storeLevelsCount = new StoreLevelsCount();
             storeLevelsCount.setName("up");
