@@ -30,7 +30,7 @@ public class HandleWidget extends AppWidgetProvider {
     private final static int DOWN = -1;
     private final static int NORMAL = 0;
     private final static int UP = 1;
-    private boolean flag = true;
+    private static boolean flag = false;
 
     private AppDatabase appDatabase;
 
