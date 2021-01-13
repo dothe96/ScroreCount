@@ -6,6 +6,7 @@ import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
@@ -27,10 +28,11 @@ public class HandleWidget extends AppWidgetProvider {
     private final static String DOWN_CLICK = "HandleWidget.DOWN_CLICK";
     private final static String NORMAL_CLICK = "HandleWidget.NORMAL_CLICK";
     private final static String UP_CLICK = "HandleWidget.UP_CLICK";
+    private final static String PREFS_NAME = "CHECK_CLICKED";
+    private final static String SETTINGS_TAG = "HandleWidget.CheckClicked";
     private final static int DOWN = -1;
     private final static int NORMAL = 0;
     private final static int UP = 1;
-    private static boolean flag = false;
 
     private AppDatabase appDatabase;
 
@@ -48,11 +50,12 @@ public class HandleWidget extends AppWidgetProvider {
         List<StoreLevelsCount> allDaysRecord = storeLevelsCountDAO.getAll();
         int levels = 0;
         int progress = 0;
-        boolean isRatedTime = isRatedTime();
+        boolean isRatedTime = isRatedTime(context);
+        boolean isClickedToday = getValuesSettings(SETTINGS_TAG, getSettings(context));
         levels = calculateLevels(allDaysRecord);
         progress = calculateProgress(levels);
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.widget_layout);
-        if (isRatedTime && flag) {
+        if (isRatedTime && isClickedToday) {
             views.setViewVisibility(R.id.btn_range, View.VISIBLE);
             views.setOnClickPendingIntent(R.id.btn_down, getPendingIntent(DOWN, context));
             views.setOnClickPendingIntent(R.id.btn_normal, getPendingIntent(NORMAL, context));
@@ -60,10 +63,10 @@ public class HandleWidget extends AppWidgetProvider {
         } else {
             views.setViewVisibility(R.id.btn_range, View.GONE);
         }
-        updateText(views, context, isRatedTime, levels);
+        updateText(views, context, isRatedTime, isClickedToday, levels);
         views.setProgressBar(R.id.activeProgress, 100, progress, false);
         Log.d(TAG, "onUpdate(): levels = " + levels + " progress = " + progress +
-                " isRatedTime = " + isRatedTime + " flag = " + flag);
+                " isRatedTime = " + isRatedTime + " isClickedToday = " + isClickedToday);
         appWidgetManager.updateAppWidget(appWidgetIds, views);
     }
 
@@ -101,7 +104,7 @@ public class HandleWidget extends AppWidgetProvider {
             storeLevelsCount.setDate(Calendar.getInstance().getTime().toString());
             StoreLevelsCountDAO storeLevelsCountDAO = getAppDatabase(context).getStoreLevelsCountDAO();
             storeLevelsCountDAO.insert(storeLevelsCount);
-            flag = false;
+            commitValuesSettings(SETTINGS_TAG, false, getSettings(context));
         } else if (typeClick.equals(NORMAL_CLICK)) {
             Log.d(TAG, "buttonClick: " + NORMAL_CLICK);
             StoreLevelsCount storeLevelsCount = new StoreLevelsCount();
@@ -110,7 +113,7 @@ public class HandleWidget extends AppWidgetProvider {
             storeLevelsCount.setDate(Calendar.getInstance().getTime().toString());
             StoreLevelsCountDAO storeLevelsCountDAO = getAppDatabase(context).getStoreLevelsCountDAO();
             storeLevelsCountDAO.insert(storeLevelsCount);
-            flag = false;
+            commitValuesSettings(SETTINGS_TAG, false, getSettings(context));
 
         } else if (typeClick.equals(UP_CLICK)) {
             Log.d(TAG, "buttonClick: " + UP_CLICK);
@@ -120,26 +123,26 @@ public class HandleWidget extends AppWidgetProvider {
             storeLevelsCount.setDate(Calendar.getInstance().getTime().toString());
             StoreLevelsCountDAO storeLevelsCountDAO = getAppDatabase(context).getStoreLevelsCountDAO();
             storeLevelsCountDAO.insert(storeLevelsCount);
-            flag = false;
+            commitValuesSettings(SETTINGS_TAG, false, getSettings(context));
         }
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
         int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context, HandleWidget.class));
         onUpdate(context, appWidgetManager, appWidgetIds);
     }
 
-    private void updateText(RemoteViews views, Context context, boolean isRatedTime, int levels) {
+    private void updateText(RemoteViews views, Context context, boolean isRatedTime, boolean isClickedToday, int levels) {
         views.setTextViewText(R.id.levels_text, "Levels " + levels);
-        views.setTextViewText(R.id.updated_text, getRandomText(context, isRatedTime));
+        views.setTextViewText(R.id.updated_text, getRandomText(context, isRatedTime, isClickedToday));
     }
 
     private int calculateProgress(int levels) {
         return (int)(((float) (levels / 365f /*1 year for better*/)) * 100f);
     }
 
-    private String getRandomText(Context context, boolean isRatedTime) {
+    private String getRandomText(Context context, boolean isRatedTime, boolean isClickedToday) {
         String text;
         String[] array;
-        if (isRatedTime && flag) {
+        if (isRatedTime && isClickedToday) {
             array = context.getResources().getStringArray(R.array.rated_time);
         } else {
             array = context.getResources().getStringArray(R.array.normal_time);
@@ -162,7 +165,7 @@ public class HandleWidget extends AppWidgetProvider {
         return db;
     }
 
-    private boolean isRatedTime() {
+    private boolean isRatedTime(Context context) {
         int start = 21;
         int end = 24;
 
@@ -178,9 +181,24 @@ public class HandleWidget extends AppWidgetProvider {
         long endHourMilli = cal.getTimeInMillis();
 
         if (currentHourMilli > endHourMilli) {
-            flag = true;
+            // reset clicked for new day
+            commitValuesSettings(SETTINGS_TAG, true, getSettings(context));
         }
 
         return currentHourMilli > startHourMilli && currentHourMilli < endHourMilli;
+    }
+
+    private SharedPreferences getSettings(Context context) {
+        return  context.getSharedPreferences(PREFS_NAME, 0 );
+    }
+
+    private void commitValuesSettings(String tag, boolean value, SharedPreferences settings) {
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putBoolean(tag, value);
+        editor.commit();
+    }
+
+    private boolean getValuesSettings(String tag, SharedPreferences settings) {
+        return settings.getBoolean(tag, false);
     }
 }
