@@ -27,12 +27,12 @@ public class HandleWidget extends AppWidgetProvider {
     private final static String DOWN_CLICK = "HandleWidget.DOWN_CLICK";
     private final static String NORMAL_CLICK = "HandleWidget.NORMAL_CLICK";
     private final static String UP_CLICK = "HandleWidget.UP_CLICK";
-    private final static String PREFS_NAME = "LAST_DAY";
+    private final static String PREFS_NAME = "APP_SETTINGS";
     private final static String LAST_DAY_TAG = "HandleWidget.LastDay";
+    private final static String CLICKABLE_TAG = "HandleWidget.Clickable";
     private final static int DOWN = -1;
     private final static int NORMAL = 0;
     private final static int UP = 1;
-    private static boolean isButtonsClickable = false;
 
     private AppDatabase appDatabase;
 
@@ -48,9 +48,11 @@ public class HandleWidget extends AppWidgetProvider {
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         int levels = 0;
         int progress = 0;
+        SharedPreferences settings = getSettings(context);
         StoreLevelsCountDAO storeLevelsCountDAO = getAppDatabase(context).getStoreLevelsCountDAO();
         List<StoreLevelsCount> allDaysRecord = storeLevelsCountDAO.getAll();
-        detectNewDay(context);
+        detectNewDay(settings);
+        boolean isButtonsClickable = getButtonsClickable(CLICKABLE_TAG, settings);
         boolean isRatedTime = isRatedTime();
         levels = calculateLevels(allDaysRecord);
         progress = calculateProgress(levels);
@@ -63,19 +65,18 @@ public class HandleWidget extends AppWidgetProvider {
         } else {
             views.setViewVisibility(R.id.btn_range, View.GONE);
         }
-        updateText(views, context, isRatedTime, levels);
+        updateText(views, context, isRatedTime, isButtonsClickable, levels);
         views.setProgressBar(R.id.activeProgress, 100, progress, false);
         Log.d(TAG, "onUpdate(): levels = " + levels + " progress = " + progress +
                 " isRatedTime = " + isRatedTime + " isButtonsClickable = " + isButtonsClickable);
         appWidgetManager.updateAppWidget(appWidgetIds, views);
     }
 
-    private void detectNewDay(Context context) {
+    private void detectNewDay(SharedPreferences settings) {
         Calendar cal = Calendar.getInstance();
-        SharedPreferences settings = getSettings(context);
         int today = cal.get(Calendar.DAY_OF_YEAR);
         if (today != getLastDayStored(LAST_DAY_TAG, settings)) {
-            isButtonsClickable = true;
+            commitButtonClickable(CLICKABLE_TAG, true, settings);
             commitLastDay(LAST_DAY_TAG, today, settings);
         }
     }
@@ -106,50 +107,39 @@ public class HandleWidget extends AppWidgetProvider {
     }
 
     private void buttonClick(Context context, String typeClick) {
-        if (typeClick.equals(DOWN_CLICK)) {
-            Log.d(TAG, "buttonClick: " + DOWN_CLICK);
-            StoreLevelsCount storeLevelsCount = new StoreLevelsCount();
-            storeLevelsCount.setName("down");
-            storeLevelsCount.setState(DOWN);
-            storeLevelsCount.setDate(Calendar.getInstance().getTime().toString());
-            StoreLevelsCountDAO storeLevelsCountDAO = getAppDatabase(context).getStoreLevelsCountDAO();
-            storeLevelsCountDAO.insert(storeLevelsCount);
-            isButtonsClickable = false;
-        } else if (typeClick.equals(NORMAL_CLICK)) {
-            Log.d(TAG, "buttonClick: " + NORMAL_CLICK);
-            StoreLevelsCount storeLevelsCount = new StoreLevelsCount();
-            storeLevelsCount.setName("normal");
-            storeLevelsCount.setState(NORMAL);
-            storeLevelsCount.setDate(Calendar.getInstance().getTime().toString());
-            StoreLevelsCountDAO storeLevelsCountDAO = getAppDatabase(context).getStoreLevelsCountDAO();
-            storeLevelsCountDAO.insert(storeLevelsCount);
-            isButtonsClickable = false;
+        Log.d(TAG, "typeClick: " + typeClick);
+        StoreLevelsCount storeLevelsCount = new StoreLevelsCount();
+        storeLevelsCount.setName(typeClick);
+        storeLevelsCount.setState(getState(typeClick));
+        storeLevelsCount.setDate(Calendar.getInstance().getTime().toString());
+        StoreLevelsCountDAO storeLevelsCountDAO = getAppDatabase(context).getStoreLevelsCountDAO();
+        storeLevelsCountDAO.insert(storeLevelsCount);
+        commitButtonClickable(CLICKABLE_TAG, false, getSettings(context));
 
-        } else if (typeClick.equals(UP_CLICK)) {
-            Log.d(TAG, "buttonClick: " + UP_CLICK);
-            StoreLevelsCount storeLevelsCount = new StoreLevelsCount();
-            storeLevelsCount.setName("up");
-            storeLevelsCount.setState(UP);
-            storeLevelsCount.setDate(Calendar.getInstance().getTime().toString());
-            StoreLevelsCountDAO storeLevelsCountDAO = getAppDatabase(context).getStoreLevelsCountDAO();
-            storeLevelsCountDAO.insert(storeLevelsCount);
-            isButtonsClickable = false;
-        }
         AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
         int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context, HandleWidget.class));
         onUpdate(context, appWidgetManager, appWidgetIds);
     }
 
-    private void updateText(RemoteViews views, Context context, boolean isRatedTime, int levels) {
+    private int getState(String typeClick) {
+        if (typeClick.equals(DOWN_CLICK)) {
+            return DOWN;
+        } else if (typeClick.equals(UP_CLICK)) {
+            return UP;
+        }
+        return NORMAL;
+    }
+
+    private void updateText(RemoteViews views, Context context, boolean isRatedTime, boolean isButtonsClickable, int levels) {
         views.setTextViewText(R.id.levels_text, "Levels " + levels);
-        views.setTextViewText(R.id.updated_text, getRandomText(context, isRatedTime));
+        views.setTextViewText(R.id.updated_text, getRandomText(context, isRatedTime, isButtonsClickable));
     }
 
     private int calculateProgress(int levels) {
         return (int) (((float) (levels / 365f /*1 year for better*/)) * 100f);
     }
 
-    private String getRandomText(Context context, boolean isRatedTime) {
+    private String getRandomText(Context context, boolean isRatedTime, boolean isButtonsClickable) {
         String text;
         String[] array;
         if (isRatedTime && isButtonsClickable) {
@@ -202,7 +192,17 @@ public class HandleWidget extends AppWidgetProvider {
         editor.commit();
     }
 
+    private void commitButtonClickable(String tag, boolean clickable, SharedPreferences settings) {
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putBoolean(tag, clickable);
+        editor.commit();
+    }
+
     private int getLastDayStored(String tag, SharedPreferences settings) {
         return settings.getInt(tag, 0);
+    }
+
+    private boolean getButtonsClickable(String tag, SharedPreferences settings) {
+        return settings.getBoolean(tag, false);
     }
 }
